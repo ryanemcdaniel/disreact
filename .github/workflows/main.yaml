@@ -15,3 +15,4 @@ jobs:
         with:
           node-version-file: package.json
           cache: pnpm
+      - run: pnpm install
