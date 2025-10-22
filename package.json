@@ -1,0 +1,45 @@
+{
+  "name": "disreact",
+  "version": "0.0.0",
+  "description": "React-like Discord interactions",
+  "author": "Ryan McDaniel <ryan.e.mcdaniel@outlook.com> (https://ryanemcdaniel.com/)",
+  "license": "MPL-2.0",
+  "keywords": [
+    "discord",
+    "react",
+    "effect",
+    "effect-ts"
+  ],
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "dependencies": {
+    "pako": "2.1.0"
+  },
+  "peerDependencies": {
+    "@effect/platform": ">=0.92.1",
+    "effect": ">=3.18.4"
+  },
+  "packageManager": "pnpm@10.17.1",
+  "engines": {
+    "node": "22.11.0"
+  },
+  "scripts": {
+    "types": "tsc --noEmit --project tsconfig.build.json",
+    "lint": "eslint .",
+    "fixlint": "eslint . --fix",
+    "build": "rslib build",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@effect/vitest": "0.26.0",
+    "@rslib/core": "0.16.0",
+    "@ryanemcdaniel/eslint-config": "0.0.0",
+    "@vitest/coverage-v8": "3.2.4",
+    "eslint": "^9.38.0",
+    "rsbuild-plugin-dts": "0.16.0",
+    "typescript": "5.9.3",
+    "vitest": "3.2.4"
+  }
+}

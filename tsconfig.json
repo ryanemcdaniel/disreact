@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target"                    : "esnext",
+    "module"                    : "esnext",
+    "moduleResolution"          : "bundler",
+    "moduleDetection"           : "force",
+    "esModuleInterop"           : true,
+    "isolatedModules"           : true,
+    "verbatimModuleSyntax"      : true,
+    "resolveJsonModule"         : true,
+    "preserveSymlinks"          : false,
+    "strict"                    : true,
+    "exactOptionalPropertyTypes": true
+  }
+}
