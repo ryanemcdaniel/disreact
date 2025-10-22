@@ -27,11 +27,14 @@ jobs:
       - uses: actions/configure-pages@v5
       - uses: pnpm/action-setup@v4.2.0
       - uses: actions/setup-node@v6.0.0
+        with:
+          node-version-file: package.json
+          cache: pnpm
       - run: pnpm install
       - run: pnpm --filter docs build
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: 'docs/docs'
+          path: 'docs/doc_build'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
