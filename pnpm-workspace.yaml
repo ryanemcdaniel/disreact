@@ -1,6 +1,10 @@
+packages:
+  - docs
+
 ignoredBuiltDependencies:
   - core-js
   - esbuild
 
 onlyBuiltDependencies:
+  - '@parcel/watcher'
   - msgpackr-extract
