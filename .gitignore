@@ -1,5 +1,8 @@
-.idea
 .dist
+.DS_Store
 .coverage
+.idea
+.vscode
 dist
+doc_build
 node_modules
