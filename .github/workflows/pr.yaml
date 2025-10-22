@@ -1,0 +1,22 @@
+name: pr
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5.0.0
+      - uses: pnpm/action-setup@v4.2.0
+      - uses: actions/setup-node@v6.0.0
+        with:
+          node-version-file: package.json
+          cache: pnpm
+      - run: pnpm install
+      - run: pnpm types
+      - run: pnpm lint
+      - run: pnpm build
+      - run: pnpm test
