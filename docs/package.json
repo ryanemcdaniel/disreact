@@ -9,6 +9,6 @@
   },
   "devDependencies": {
     "rspress": "1.40.2",
-    "@types/node": "18.11.17"
+    "@types/node": "24.9.1"
   }
 }
