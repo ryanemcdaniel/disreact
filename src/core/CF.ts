@@ -81,8 +81,3 @@ export const call = (self: CF<any>, props: any): Effect.Effect<Jsx.Children> => 
     return Effect.succeed(res);
   });
 };
-
-export const renderDual = dual<
-  (props: any) => (self: CF) => Effect.Effect<Jsx.Children>,
-  (self: CF, props: any) => Effect.Effect<Jsx.Children>
->(2, call);

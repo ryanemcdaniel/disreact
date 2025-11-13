@@ -8,7 +8,7 @@ const TypeId = Symbol.for('disreact/jsx');
 
 export interface Jsx extends Pipeable.Pipeable, Inspectable.Inspectable {
   readonly [TypeId]: typeof TypeId;
-  readonly key     : string | undefined;
+  readonly key     : Key;
   readonly type    : any;
   readonly props   : any;
   readonly children: any[];
@@ -36,11 +36,9 @@ export const isComponent = (u: Jsx): u is Jsx => typeof u.type === 'function';
 
 export const isValue = (u: Children): u is Value => !u || typeof u !== 'object';
 
-export const isChild = (u: Children): u is Child => !Array.isArray(u);
-
 export const isChilds = (u: Children): u is Childs => Array.isArray(u);
 
-const Proto = {
+const Proto: Partial<{ [K in keyof Jsx]: any }> = {
   ...Pipeable.Prototype,
   ...Inspectable.BaseProto,
   [TypeId]: TypeId,
@@ -50,28 +48,28 @@ const Proto = {
   children: undefined,
   ref     : undefined,
   creator : undefined,
-  toJSON(this: any) {
+  toJSON() {
     const {children, ...props} = this.props;
     return {
       _id     : this.creator,
-      key     : this.key,
       type    : typeof this.type === 'function' ? this.type.name : String(this.type),
+      key     : this.key,
       props   : props,
       children: this.children,
     };
   },
 };
 
-const DEVProto = {
+const DEVProto: Partial<{ [K in keyof Jsx]: any }> = {
   ...Proto,
   source : undefined,
   context: undefined,
-  toJSON(this: any) {
+  toJSON() {
     const {children, ...props} = this.props;
     return {
       _id     : this.creator,
-      key     : this.key,
       type    : typeof this.type === 'function' ? this.type.name : String(this.type),
+      key     : this.key,
       source  : this.source,
       context : this.context,
       props   : props,
@@ -85,20 +83,30 @@ const makeChildren = (props: any) =>
   Array.isArray(props.children) ? props.children :
   [props.children];
 
-export const jsx = (type: any, props: any, key?: string | undefined): Jsx => {
-  const self   = Object.create(Proto);
-  self.key     = key;
-  self.type    = type;
-  self.props   = props;
-  self.creator = 'jsx';
+export type Key = string | number | undefined;
+
+export const jsx = (type: any, props: any, key?: Key): Jsx => {
+  const self = Object.create(Proto) as Types.Mutable<Jsx>;
   switch (typeof type) {
     case 'string':
+      self.key      = key;
+      self.type     = type;
+      self.props    = props;
+      self.creator  = 'jsx';
       self.children = makeChildren(props);
       return self;
     case 'function':
+      self.key      = key;
+      self.type     = type;
+      self.props    = props;
+      self.creator  = 'jsx';
       self.children = [];
       return self;
     case 'symbol':
+      self.key      = key;
+      self.type     = type;
+      self.props    = props;
+      self.creator  = 'jsx';
       self.children = makeChildren(props);
       return self;
     default:
@@ -106,20 +114,28 @@ export const jsx = (type: any, props: any, key?: string | undefined): Jsx => {
   }
 };
 
-export const jsxs = (type: any, props: any, key?: string | undefined): Jsx => {
-  const self   = Object.create(Proto);
-  self.key     = key;
-  self.type    = type;
-  self.props   = props;
-  self.creator = 'jsxs';
+export const jsxs = (type: any, props: any, key?: Key): Jsx => {
+  const self = Object.create(Proto) as Types.Mutable<Jsx>;
   switch (typeof type) {
     case 'string':
+      self.key      = key;
+      self.type     = type;
+      self.props    = props;
+      self.creator  = 'jsxs';
       self.children = props.children;
       return self;
     case 'function':
+      self.key      = key;
+      self.type     = type;
+      self.props    = props;
+      self.creator  = 'jsxs';
       self.children = [];
       return self;
     case 'symbol':
+      self.key      = key;
+      self.type     = type;
+      self.props    = props;
+      self.creator  = 'jsxs';
       self.children = props.children;
       return self;
     default:
@@ -127,22 +143,34 @@ export const jsxs = (type: any, props: any, key?: string | undefined): Jsx => {
   }
 };
 
-export const jsxDEV = (type: any, props: any, key: string | undefined, source: any, context: any): Jsx => {
-  const self   = Object.create(DEVProto);
-  self.key     = key;
-  self.type    = type;
-  self.props   = props;
-  self.creator = 'jsxDEV';
-  self.source  = source;
-  self.context = context;
+export const jsxDEV = (type: any, props: any, key: Key, source: any, context: any): Jsx => {
+  const self = Object.create(DEVProto) as Types.Mutable<Jsx>;
   switch (typeof type) {
     case 'string':
+      self.key      = key;
+      self.type     = type;
+      self.props    = props;
+      self.creator  = 'jsxDEV';
+      self.source   = source;
+      self.context  = context;
       self.children = makeChildren(props);
       return self;
     case 'function':
+      self.key      = key;
+      self.type     = type;
+      self.props    = props;
+      self.creator  = 'jsxDEV';
+      self.source   = source;
+      self.context  = context;
       self.children = [];
       return self;
     case 'symbol':
+      self.key      = key;
+      self.type     = type;
+      self.props    = props;
+      self.creator  = 'jsxDEV';
+      self.source   = source;
+      self.context  = context;
       self.children = makeChildren(props);
       return self;
     default:
@@ -162,7 +190,7 @@ export const clone = (ref: Jsx): Jsx => {
   return self;
 };
 
-export const propsWithoutChildren = (self: Jsx): any => {
+export const getPropsOnly = (self: Jsx): any => {
   const {children, ...props} = self.props;
   return props;
 };
@@ -227,130 +255,63 @@ export const transform = (self: Jsx, f: (node: Jsx, childs: (string | Transform)
   };
 };
 
-export const map = <A>(self: Jsx, f: (node: Jsx, childs: A[]) => A): A => {
-  const stack   = [self as Jsx | TransformValue];
-  const targets = new WeakMap<Jsx | TransformValue, A[]>();
-  const sources = new WeakMap<Jsx | TransformValue, A[]>();
-
-  return f(self, []);
+const toStringProp = (v: unknown): string => {
+  if (v === null) return `${v}`;
+  const type = typeof v;
+  if (type === 'undefined') return `${v}`;
+  if (type === 'boolean') return `${v}`;
+  if (type === 'number') return `${v}`;
+  if (type === 'bigint') return `${v}n`;
+  if (type === 'string') return `"${v}"`;
+  if (type === 'symbol') return `[Symbol(${String(v)})]`;
+  if (type === 'function') return `[Function (${(v as any).name})]`;
+  if (Array.isArray(v)) return `[Array (${v.length})]`;
+  return `[Object (${Object.keys(v as any).length})]`;
 };
 
-const toStringPropsValue = (value: any) => {
-  switch (typeof value) {
-    case 'string':
-      return `"${value}"`;
-    case 'object':
-      return !value ? `${value}` :
-             Array.isArray(value) ? `[Array (${value.length})]` :
-             `[Object (${Object.keys(value).length})]`;
-    case 'function':
-      return `[Function (${value.name})]`;
-    case 'symbol':
-      return `[Symbol (${value.toString()})]`;
-    default:
-      return `${value}`;
-  }
+const toStringsProps = (p: any) => {
+  const {children, ...props} = p;
+  const keys                 = Object.keys(props);
+  return keys.map((k) => `  ${k}=${toStringProp(props[k])}`);
 };
 
-const toStringProps = (props: any) => {
-  const values = [] as string[];
-  const keys   = Object.keys(props);
-  if (keys.length === 0) {
-    return values;
-  }
-  for (const key of keys) {
-    if (key !== 'children') {
-      values.push(`  ${key}=${toStringPropsValue(props[key])}`);
-    }
-  }
-  return values;
+const toStringValue = (v: Value) => {
+  if (v === null) return `${v}`;
+  const type = typeof v;
+  if (type === 'undefined') return `${v}`;
+  if (type === 'boolean') return `${v}`;
+  if (type === 'number') return `${v}`;
+  if (type === 'bigint') return `${v}n`;
+  return `"${v}"`;
 };
 
-const toStringName = (self: Jsx) => {
-  switch (typeof self.type) {
-    case 'string':
-      return self.type;
-    case 'function':
-      return self.type.name;
-  }
-  if ('ref' in self.props) {
-    return 'Fragment';
-  }
-  return '';
-};
-
-const indent = (s: string, n: number) => '  '.repeat(n).concat(s).concat('\n');
-
-const toStringSS = (self: Jsx) => {
-  const values = [] as string[];
-  const stack  = [self];
-  const levels = new WeakMap();
-  const tails  = new WeakMap();
-
-  levels.set(self, 0);
+export function toString(this: Jsx): string {
+  const stack   = [this as Jsx | {value: Value}];
+  const indents = new WeakMap();
+  const visited = new WeakMap();
+  const values  = [] as [number, string][];
+  indents.set(this, 0);
 
   while (stack.length > 0) {
-    const cur      = stack.pop()!;
-    const curLevel = levels.get(cur)!;
+    const node   = stack.pop()!;
+    const indent = indents.get(node)!;
 
-    if (!tails.has(cur)) {
-      const name     = toStringName(cur);
-      const props    = toStringProps(cur.props);
-      const children = makeChildren(cur.props);
-
-      for (let i = children.length - 1; i >= 0; i--) {
-        const child = children[i];
-
-        if (isValue(child)) {
-
-        }
-      }
-
-      for (const child of children) {
-        if (isJsx(child)) {
-          levels.set(child, curLevel + 1);
-        }
-        else {
-          values.push(indent(toStringPropsValue(child), curLevel));
-        }
-      }
-
-      if (props.length === 0) {
-        if (children.length === 0) {
-          values.push(indent(`<${name}/>`, curLevel));
-          tails.set(cur, '');
-        }
-        else {
-          values.push(indent(`<${name}>`, curLevel));
-          tails.set(cur, indent(`</${name}>`, curLevel));
-        }
-      }
-      else if (children.length === 0) {
-        values.push(indent(`<${name}`, curLevel));
-        for (const prop of props) {
-          values.push(indent(prop, curLevel));
-        }
-        values.push(indent(`/>`, curLevel));
-        tails.set(cur, '');
-      }
-      else {
-        values.push(indent(`<${name}`, curLevel));
-        for (const prop of props) {
-          values.push(indent(prop, curLevel));
-        }
-        values.push(indent(`>`, curLevel));
-        tails.set(cur, indent(`</${name}>`, curLevel));
-      }
+    if (!isJsx(node)) {
+      const value = toStringValue(node.value);
+      values.push([indent, value]);
     }
-    else {
-      const tail = tails.get(cur)!;
-      if (tail) {
-        values.push(tail);
-      }
+
+    if (isJsx(node)) {
+      const props    = toStringsProps(node.props);
+      const children = !('children' in node.props) ? [] : Array.isArray(node.props.children) ? node.props.children : [node.props.children];
     }
+
+    // if (indents.has(node)) {
+    //   const [indent, value] = indents.get(node)!;
+    // }
+    // else {
+    //
+    // }
   }
-};
-
-export function toString(self: Jsx) {
   return '';
 }

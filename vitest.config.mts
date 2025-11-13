@@ -12,10 +12,10 @@ export default defineConfig({
       ignoreEmptyLines: true,
       thresholds: {
         autoUpdate: true,
-        lines: 28.84,
-        branches: 32.96,
-        functions: 29.26,
-        statements: 27.96,
+        lines: 44.59,
+        branches: 44.79,
+        functions: 45.94,
+        statements: 42.21,
       }
     },
     snapshotFormat: {

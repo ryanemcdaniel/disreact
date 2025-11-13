@@ -30,6 +30,18 @@ describe('given sync function', () => {
     `);
     expect(bound._tag).toMatchInlineSnapshot(`"s"`);
   }));
+
+  it.effect('when rendering again', Effect.fn(function* () {
+    const bound  = CF.bind(sfc);
+    const actual = yield* CF.call(bound, {prop: 'prop'});
+
+    expect(actual).toMatchInlineSnapshot(`
+      {
+        "prop": "prop",
+      }
+    `);
+    expect(bound._tag).toMatchInlineSnapshot(`"s"`);
+  }));
 });
 
 describe('given async function', () => {
@@ -48,8 +60,20 @@ describe('given async function', () => {
 
   it.effect('when rendering', Effect.fn(function* () {
     const bound  = CF.bind(afc);
-
     const actual = yield* CF.call(bound, {prop: 'prop'});
+
+    expect(actual).toMatchInlineSnapshot(`
+      {
+        "prop": "prop",
+      }
+    `);
+    expect(bound._tag).toMatchInlineSnapshot(`"a"`);
+  }));
+
+  it.effect('when rendering again', Effect.fn(function* () {
+    const bound  = CF.bind(afc);
+    const actual = yield* CF.call(bound, {prop: 'prop'});
+
     expect(actual).toMatchInlineSnapshot(`
       {
         "prop": "prop",
@@ -73,6 +97,18 @@ describe('given effect function', () => {
   });
 
   it.effect('when rendering', Effect.fn(function* () {
+    const bound  = CF.bind(efc);
+    const actual = yield* CF.call(bound, {prop: 'prop'});
+
+    expect(actual).toMatchInlineSnapshot(`
+      {
+        "prop": "prop",
+      }
+    `);
+    expect(bound._tag).toMatchInlineSnapshot(`"e"`);
+  }));
+
+  it.effect('when rendering again', Effect.fn(function* () {
     const bound  = CF.bind(efc);
     const actual = yield* CF.call(bound, {prop: 'prop'});
 

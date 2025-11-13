@@ -1,5 +1,4 @@
 import type * as Effect from 'effect/Effect';
-import {any} from 'effect/Match';
 import type * as Jsx from './core/Jsx.js';
 import type * as JsxSpec from './runtime/Spec.js';
 
