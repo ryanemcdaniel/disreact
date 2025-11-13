@@ -9,6 +9,9 @@
     "verbatimModuleSyntax"      : true,
     "resolveJsonModule"         : true,
     "preserveSymlinks"          : false,
+    "jsx"                       : "react-jsx",
+    "jsxImportSource"           : "./src",
+    "baseUrl"                   : ".",
     "strict"                    : true,
     "exactOptionalPropertyTypes": true
   }
