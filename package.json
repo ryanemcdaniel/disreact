@@ -2,8 +2,13 @@
   "name": "disreact",
   "version": "0.0.0",
   "description": "React-like Discord interactions",
-  "author": "Ryan McDaniel <ryan.e.mcdaniel@outlook.com> (https://ryanemcdaniel.com/)",
   "license": "MPL-2.0",
+  "author": "Ryan McDaniel <ryan.e.mcdaniel@outlook.com> (https://ryanemcdaniel.com/)",
+  "homepage": "https://ryanemcdaniel.github.com/disreact",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ryanemcdaniel/disreact.git"
+  },
   "keywords": [
     "discord",
     "react",
@@ -14,30 +19,49 @@
     "registry": "https://registry.npmjs.org/",
     "access": "public"
   },
-  "dependencies": {
-    "pako": "2.1.0"
-  },
   "peerDependencies": {
     "@effect/platform": ">=0.92.1",
-    "effect": ">=3.18.4"
+    "@msgpack/msgpack": ">=3.1.2",
+    "@typed/id": ">=0.17.2",
+    "dfx": ">=0.126.1",
+    "effect": ">=3.18.4",
+    "pako": ">=2.1.0"
   },
-  "packageManager": "pnpm@10.17.1",
+  "exports": {
+    "./jsx-runtime": "./src/jsx-runtime.js",
+    "./jsx-dev-runtime": "./src/jsx-dev-runtime.js"
+  },
+  "packageManager": "pnpm@10.22.0",
   "engines": {
-    "node": "22.11.0"
+    "node": "22.21.1"
   },
   "scripts": {
+    "versions": "pnpm -v && node -v",
     "types": "tsc --noEmit --project tsconfig.build.json",
     "lint": "eslint .",
     "fixlint": "eslint . --fix",
     "build": "rslib build",
-    "test": "vitest run"
+    "test": "vitest run",
+    "coverage": "vitest run --coverage",
+    "coverage:open": "open coverage/index.html"
   },
   "devDependencies": {
-    "@effect/vitest": "0.26.0",
+    "@effect/language-service": "0.47.3",
+    "@effect/platform": "0.92.1",
+    "@effect/platform-node": "0.98.4",
+    "@effect/vitest": "0.27.0",
+    "@msgpack/msgpack": "3.1.2",
     "@rslib/core": "0.16.0",
     "@ryanemcdaniel/eslint-config": "0.0.0",
+    "@typed/id": "0.17.2",
+    "@types/pako": "2.0.4",
     "@vitest/coverage-v8": "3.2.4",
-    "eslint": "^9.38.0",
+    "dfx": "0.126.1",
+    "discord-api-types": "0.38.30",
+    "effect": "3.19.3",
+    "eslint": "9.38.0",
+    "eslint-plugin-license-header": "0.8.0",
+    "pako": "2.1.0",
     "rsbuild-plugin-dts": "0.16.0",
     "typescript": "5.9.3",
     "vitest": "3.2.4"

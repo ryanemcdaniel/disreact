@@ -8,3 +8,15 @@ ignoredBuiltDependencies:
 onlyBuiltDependencies:
   - '@parcel/watcher'
   - msgpackr-extract
+
+strictPeerDependencies: true
+minimumReleaseAge: 4320
+saveExact: true
+engineStrict: true
+nodeVersion: 22.21.1
+useNodeVersion: 22.21.1
+nodeOptions: "${NODE_OPTIONS:- } --experimental-vm-modules"
+
+gitBranchLockfile: true
+mergeGitBranchLockfilesBranchPattern:
+  - main

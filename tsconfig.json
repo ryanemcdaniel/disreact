@@ -1,15 +1,40 @@
 {
+  "exclude": ["dist"],
   "compilerOptions": {
-    "target"                    : "esnext",
-    "module"                    : "esnext",
-    "moduleResolution"          : "bundler",
-    "moduleDetection"           : "force",
-    "esModuleInterop"           : true,
-    "isolatedModules"           : true,
-    "verbatimModuleSyntax"      : true,
-    "resolveJsonModule"         : true,
-    "preserveSymlinks"          : false,
-    "strict"                    : true,
-    "exactOptionalPropertyTypes": true
+    "baseUrl": ".",
+    "jsx": "react-jsx",
+    "jsxImportSource": "src",
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "moduleDetection": "force",
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "allowSyntheticDefaultImports": true,
+    "erasableSyntaxOnly": true,
+    "resolveJsonModule": true,
+    "resolvePackageJsonImports": true,
+    "preserveSymlinks": false,
+    "strict": true,
+    "strictBuiltinIteratorReturn": true,
+    "exactOptionalPropertyTypes": false,
+    "plugins": [
+      {
+        "name": "@effect/language-service",
+        "namespaceImportPackages": [
+          "effect",
+          "@effect/platform",
+          "@effect/platform-node",
+          "@effect-aws"
+        ],
+        "diagnosticSeverity": {
+          "importFromBarrel": "error"
+        }
+      }
+    ],
+    "disableSizeLimit": true,
+    "noErrorTruncation": true,
+    "noUncheckedSideEffectImports": true
   }
 }

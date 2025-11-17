@@ -2,19 +2,47 @@ import {defineConfig} from 'vitest/config';
 
 export default defineConfig({
   test: {
+    coverage: {
+      provider: 'v8',
+      include: ['src/**'],
+      exclude: ['src/jsx-runtime.tsx', 'src/jsx-dev-runtime.tsx'],
+      reportOnFailure: true,
+      cleanOnRerun: true,
+      experimentalAstAwareRemapping: true,
+      ignoreEmptyLines: true,
+      thresholds: {
+        autoUpdate: true,
+        lines: 44.59,
+        branches: 44.79,
+        functions: 45.94,
+        statements: 42.21,
+      }
+    },
+    snapshotFormat: {
+      compareKeys: null,
+    },
     projects: [
       {
         test: {
-          name: 'integration',
-          include: ['test/integration/**/*.spec.(ts|tsx)'],
-        }
+          name   : 'dev',
+          include: ['./test/dev/**/*.spec.(ts|tsx)'],
+        },
       },
       {
         test: {
-          name: 'unit',
-          include: ['test/unit/**/*.spec.(ts|tsx)'],
-        }
-      }
+          name   : 'integration',
+          include: ['./test/integration/**/*.spec.(ts|tsx)'],
+        },
+        esbuild: {
+          jsxDev: false,
+        },
+      },
+      {
+        test: {
+          name   : 'unit',
+          include: ['./test/unit/**/*.spec.(ts|tsx)'],
+        },
+      },
     ],
   },
-})
+});
