@@ -59,7 +59,7 @@
     "dfx": "0.126.1",
     "discord-api-types": "0.38.30",
     "effect": "3.19.3",
-    "eslint": "9.38.0",
+    "eslint": "9.39.1",
     "eslint-plugin-license-header": "0.8.0",
     "pako": "2.1.0",
     "rsbuild-plugin-dts": "0.16.0",
