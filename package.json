@@ -27,11 +27,16 @@
     "effect": ">=3.18.4",
     "pako": ">=2.1.0"
   },
-  "packageManager": "pnpm@10.17.1",
+  "exports": {
+    "./jsx-runtime": "./src/jsx-runtime.js",
+    "./jsx-dev-runtime": "./src/jsx-dev-runtime.js"
+  },
+  "packageManager": "pnpm@10.22.0",
   "engines": {
-    "node": "22.11.0"
+    "node": "22.21.1"
   },
   "scripts": {
+    "versions": "pnpm -v && node -v",
     "types": "tsc --noEmit --project tsconfig.build.json",
     "lint": "eslint .",
     "fixlint": "eslint . --fix",

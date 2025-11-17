@@ -78,7 +78,7 @@ const DEVProto: Partial<{ [K in keyof Jsx]: any }> = {
   },
 };
 
-const makeChildren = (props: any) =>
+const getChilds = (props: any) =>
   !props.children ? [] :
   Array.isArray(props.children) ? props.children :
   [props.children];
@@ -93,7 +93,7 @@ export const jsx = (type: any, props: any, key?: Key): Jsx => {
       self.type     = type;
       self.props    = props;
       self.creator  = 'jsx';
-      self.children = makeChildren(props);
+      self.children = getChilds(props);
       return self;
     case 'function':
       self.key      = key;
@@ -107,7 +107,7 @@ export const jsx = (type: any, props: any, key?: Key): Jsx => {
       self.type     = type;
       self.props    = props;
       self.creator  = 'jsx';
-      self.children = makeChildren(props);
+      self.children = getChilds(props);
       return self;
     default:
       throw new Error(`[jsx] invalid type: ${type}`);
@@ -153,7 +153,7 @@ export const jsxDEV = (type: any, props: any, key: Key, source: any, context: an
       self.creator  = 'jsxDEV';
       self.source   = source;
       self.context  = context;
-      self.children = makeChildren(props);
+      self.children = getChilds(props);
       return self;
     case 'function':
       self.key      = key;
@@ -171,7 +171,7 @@ export const jsxDEV = (type: any, props: any, key: Key, source: any, context: an
       self.creator  = 'jsxDEV';
       self.source   = source;
       self.context  = context;
-      self.children = makeChildren(props);
+      self.children = getChilds(props);
       return self;
     default:
       throw new Error(`[jsxDEV] invalid type: ${type}`);
@@ -190,10 +190,15 @@ export const clone = (ref: Jsx): Jsx => {
   return self;
 };
 
-export const getPropsOnly = (self: Jsx): any => {
+export const getPropsOnly = (self: Jsx) => {
   const {children, ...props} = self.props;
   return props;
 };
+
+export const getPropsChilds = (self: Jsx): Childs =>
+  !('children' in self.props) ? [] :
+  Array.isArray(self.props.children) ? self.props.children :
+  [self.props.children];
 
 export interface Transform<T extends string = string, D = any> {
   type: T;
@@ -303,7 +308,7 @@ export function toString(this: Jsx): string {
 
     if (isJsx(node)) {
       const props    = toStringsProps(node.props);
-      const children = !('children' in node.props) ? [] : Array.isArray(node.props.children) ? node.props.children : [node.props.children];
+      const children = getPropsChilds(node);
     }
 
     // if (indents.has(node)) {

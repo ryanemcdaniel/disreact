@@ -28,7 +28,7 @@ describe('given sync function', () => {
         "prop": "prop",
       }
     `);
-    expect(bound._tag).toMatchInlineSnapshot(`"s"`);
+    expect(bound._tag).toMatchInlineSnapshot(`"Sync"`);
   }));
 
   it.effect('when rendering again', Effect.fn(function* () {
@@ -40,7 +40,7 @@ describe('given sync function', () => {
         "prop": "prop",
       }
     `);
-    expect(bound._tag).toMatchInlineSnapshot(`"s"`);
+    expect(bound._tag).toMatchInlineSnapshot(`"Sync"`);
   }));
 });
 
@@ -52,7 +52,7 @@ describe('given async function', () => {
     expect(JSON.stringify(bound, null, 2)).toMatchInlineSnapshot(`
       "{
         "_id": "CF",
-        "_tag": "a",
+        "_tag": "Async",
         "name": "afc"
       }"
     `);
@@ -67,7 +67,7 @@ describe('given async function', () => {
         "prop": "prop",
       }
     `);
-    expect(bound._tag).toMatchInlineSnapshot(`"a"`);
+    expect(bound._tag).toMatchInlineSnapshot(`"Async"`);
   }));
 
   it.effect('when rendering again', Effect.fn(function* () {
@@ -79,7 +79,7 @@ describe('given async function', () => {
         "prop": "prop",
       }
     `);
-    expect(bound._tag).toMatchInlineSnapshot(`"a"`);
+    expect(bound._tag).toMatchInlineSnapshot(`"Async"`);
   }));
 });
 
@@ -105,7 +105,7 @@ describe('given effect function', () => {
         "prop": "prop",
       }
     `);
-    expect(bound._tag).toMatchInlineSnapshot(`"e"`);
+    expect(bound._tag).toMatchInlineSnapshot(`"Effect"`);
   }));
 
   it.effect('when rendering again', Effect.fn(function* () {
@@ -117,6 +117,6 @@ describe('given effect function', () => {
         "prop": "prop",
       }
     `);
-    expect(bound._tag).toMatchInlineSnapshot(`"e"`);
+    expect(bound._tag).toMatchInlineSnapshot(`"Effect"`);
   }));
 });
