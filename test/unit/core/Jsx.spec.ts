@@ -17,14 +17,12 @@ describe('jsx', () => {
 
     expect(JSON.stringify(actual, null, 2)).toMatchInlineSnapshot(`
       "{
-        "_id": "jsx",
         "type": "tag1",
         "props": {
           "prop1": "prop1"
         },
         "children": [
           {
-            "_id": "jsx",
             "type": "tag2",
             "props": {
               "prop2": "prop2"
@@ -48,12 +46,10 @@ describe('jsx', () => {
 
     expect(JSON.stringify(actual, null, 2)).toMatchInlineSnapshot(`
       "{
-        "_id": "jsx",
-        "type": "Symbol(disreact/fragment)",
+        "type": "Symbol(~disreact/jsx/Fragment)",
         "props": {},
         "children": [
           {
-            "_id": "jsx",
             "type": "tag2",
             "props": {
               "prop2": "prop2"
@@ -78,7 +74,6 @@ describe('jsx', () => {
 
     expect(JSON.stringify(actual, null, 2)).toMatchInlineSnapshot(`
       "{
-        "_id": "jsx",
         "type": "Tag1",
         "props": {},
         "children": []
@@ -109,14 +104,12 @@ describe('jsxs', () => {
 
     expect(JSON.stringify(actual, null, 2)).toMatchInlineSnapshot(`
       "{
-        "_id": "jsxs",
         "type": "tag1",
         "props": {
           "prop1": "prop1"
         },
         "children": [
           {
-            "_id": "jsx",
             "type": "tag2",
             "props": {
               "prop2": "prop2"
@@ -126,7 +119,6 @@ describe('jsxs', () => {
             ]
           },
           {
-            "_id": "jsx",
             "type": "tag3",
             "props": {
               "prop2": "prop3"
@@ -156,12 +148,10 @@ describe('jsxs', () => {
 
     expect(JSON.stringify(actual, null, 2)).toMatchInlineSnapshot(`
       "{
-        "_id": "jsxs",
-        "type": "Symbol(disreact/fragment)",
+        "type": "Symbol(~disreact/jsx/Fragment)",
         "props": {},
         "children": [
           {
-            "_id": "jsx",
             "type": "tag2",
             "props": {
               "prop2": "prop2"
@@ -171,7 +161,6 @@ describe('jsxs', () => {
             ]
           },
           {
-            "_id": "jsx",
             "type": "tag3",
             "props": {
               "prop2": "prop3"
@@ -202,7 +191,6 @@ describe('jsxs', () => {
 
     expect(JSON.stringify(actual, null, 2)).toMatchInlineSnapshot(`
       "{
-        "_id": "jsxs",
         "type": "Tag1",
         "props": {},
         "children": []
@@ -233,19 +221,13 @@ describe('jsxDEV', () => {
 
     expect(JSON.stringify(actual, null, 2)).toMatchInlineSnapshot(`
       "{
-        "_id": "jsxDEV",
         "type": "tag1",
-        "source": false,
-        "context": {},
         "props": {
           "prop1": "prop1"
         },
         "children": [
           {
-            "_id": "jsxDEV",
             "type": "tag2",
-            "source": false,
-            "context": {},
             "props": {
               "prop2": "prop2"
             },
@@ -254,10 +236,7 @@ describe('jsxDEV', () => {
             ]
           },
           {
-            "_id": "jsxDEV",
             "type": "tag3",
-            "source": false,
-            "context": {},
             "props": {
               "prop2": "prop3"
             },
@@ -286,17 +265,11 @@ describe('jsxDEV', () => {
 
     expect(JSON.stringify(actual, null, 2)).toMatchInlineSnapshot(`
       "{
-        "_id": "jsxDEV",
-        "type": "Symbol(disreact/fragment)",
-        "source": false,
-        "context": {},
+        "type": "Symbol(~disreact/jsx/Fragment)",
         "props": {},
         "children": [
           {
-            "_id": "jsxDEV",
             "type": "tag2",
-            "source": false,
-            "context": {},
             "props": {
               "prop2": "prop2"
             },
@@ -305,10 +278,7 @@ describe('jsxDEV', () => {
             ]
           },
           {
-            "_id": "jsxDEV",
             "type": "tag3",
-            "source": false,
-            "context": {},
             "props": {
               "prop2": "prop3"
             },
@@ -338,10 +308,7 @@ describe('jsxDEV', () => {
 
     expect(JSON.stringify(actual, null, 2)).toMatchInlineSnapshot(`
       "{
-        "_id": "jsxDEV",
         "type": "Tag1",
-        "source": false,
-        "context": {},
         "props": {},
         "children": []
       }"

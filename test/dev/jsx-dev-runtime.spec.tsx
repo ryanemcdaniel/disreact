@@ -1,12 +1,14 @@
 import {expect, it} from 'vitest';
+import * as Jsx from '../../src/core/Jsx.js';
 
 it('when transforming', () => {
-  function Tag1() {return undefined;}
-  function Tag2() {return undefined;}
+  function Tag1(props: any) {return props.children;}
+  function Tag2(props: any) {return props.children;}
 
   const jsx = (
     <>
       <Tag1>
+        <Tag2>{'Hello World!'}{'Hello World!'}</Tag2>
         <Tag2>Hello World!</Tag2>
       </Tag1>
       <message>
@@ -15,50 +17,29 @@ it('when transforming', () => {
     </>
   );
 
+  const transform = Jsx.transformTemplate(jsx, (node) => {
+    console.log(node.type, ...node.children.flatMap((c) => [c._tag, c.value ?? c.data]));
+    return [String(node.type), ...node.children.map((c) => [c._tag, c.value ?? c.data])].join('\n');
+  });
+
+  console.log(transform);
+
   expect(JSON.stringify(jsx, null, 2)).toMatchInlineSnapshot(`
     "{
-      "_id": "jsxDEV",
-      "type": "Symbol(disreact/fragment)",
-      "source": true,
-      "context": {
-        "fileName": "/Users/ryan/repos/ryanemcdaniel/disreact/test/dev/jsx-dev-runtime.spec.tsx",
-        "lineNumber": 8,
-        "columnNumber": 5
-      },
+      "type": "Symbol(~disreact/jsx/Fragment)",
       "props": {},
       "children": [
         {
-          "_id": "jsxDEV",
           "type": "Tag1",
-          "source": false,
-          "context": {
-            "fileName": "/Users/ryan/repos/ryanemcdaniel/disreact/test/dev/jsx-dev-runtime.spec.tsx",
-            "lineNumber": 9,
-            "columnNumber": 7
-          },
           "props": {},
           "children": []
         },
         {
-          "_id": "jsxDEV",
           "type": "message",
-          "source": false,
-          "context": {
-            "fileName": "/Users/ryan/repos/ryanemcdaniel/disreact/test/dev/jsx-dev-runtime.spec.tsx",
-            "lineNumber": 12,
-            "columnNumber": 7
-          },
           "props": {},
           "children": [
             {
-              "_id": "jsxDEV",
               "type": "embed",
-              "source": false,
-              "context": {
-                "fileName": "/Users/ryan/repos/ryanemcdaniel/disreact/test/dev/jsx-dev-runtime.spec.tsx",
-                "lineNumber": 13,
-                "columnNumber": 9
-              },
               "props": {
                 "title": "Hello World!"
               },

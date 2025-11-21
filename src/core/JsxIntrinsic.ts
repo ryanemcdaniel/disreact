@@ -2,6 +2,7 @@ import * as S from 'effect/Schema';
 import * as v10 from 'discord-api-types/v10';
 import {hole} from 'effect/Function';
 import type * as Jsx from './Jsx.js';
+import type * as Types from 'effect/Types';
 
 const encodeHex = (hex: string | number): number =>
   typeof hex === 'number' ? hex :
@@ -616,17 +617,16 @@ type Tags = keyof typeof Targets;
 type Targets = typeof Targets;
 type Attributes = typeof Attributes;
 type Values = typeof Values;
-type Value<T extends Tags> = Values[T]['Type'];
 type Children = typeof Children;
-type Data<T extends Tags> = { [K in Children[T][number]]: {type: K; data: Targets[K]['Type']} }[Children[T][number]];
-type Self<T extends Tags> = {
-  type    : T;
-  step    : string;
-  props   : Attributes[T]['Type'];
-  values  : readonly Value<T>[];
-  children: readonly Data<T>[];
-};
+type Self<T extends Tags> = Jsx.Fold.Node<
+  T,
+  Attributes[T]['Type'],
+  Values[T]['Type'] extends never ? never : Jsx.Fold.Value<Values[T]['Type']>,
+  { [K in Children[T][number]]: Jsx.Fold<K, Targets[K]['Type']> }[Children[T][number]]
+>;
 type Transform<K extends Tags> = (source: Self<K>, tgt: Targets[K]['Type']) => Targets[K]['Type'];
+
+export type Folds = Types.Simplify<{ [K in Tags]: Jsx.Fold<K, Targets[K]['Type']> }[Tags]>;
 
 const transforms: { [K in Tags]: Transform<K> } = {
   [a](src) {
