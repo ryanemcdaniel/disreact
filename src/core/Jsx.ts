@@ -37,7 +37,7 @@ export interface FC<P> {
   <E, R>(props: P): Children | Promise<Children> | Effect.Effect<Children, E, R>;
 }
 
-interface DEV extends Jsx {
+export interface DEV extends Jsx {
   readonly dev: {
     multi : DEV.IsJsxs;
     source: DEV.Source;
@@ -52,7 +52,7 @@ namespace DEV {
     lineNumber  : number;
     columnNumber: number;
   };
-  export type This = {};
+  export type This = any;
 }
 
 // =============================================================================

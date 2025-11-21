@@ -1,4 +1,4 @@
-import {expect, it, vi } from 'vitest';
+import {expect, it} from 'vitest';
 
 it('when transforming', () => {
   function Tag1() {return undefined;}

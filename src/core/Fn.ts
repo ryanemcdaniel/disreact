@@ -30,6 +30,10 @@ export interface State extends Pipeable.Pipeable, Inspectable.Inspectable {
   readonly flagged: boolean;
 }
 
+// =============================================================================
+// Prototypes
+// =============================================================================
+
 const FnProto: Util.Prototype<Fn> = {
   ...Inspectable.BaseProto,
   _id : 'Fn',
@@ -59,6 +63,10 @@ export const getDisplayName = (self: Fn) => self._rid ?? self.name ?? 'Anonymous
 
 export const getRegistryId = (self: Fn) => self._rid;
 
+// =============================================================================
+// Constructors
+// =============================================================================
+
 export const make = <T extends State>(component: T) => {
   const s = component as Types.Mutable<T>;
   const f = s.type as any;
@@ -72,6 +80,10 @@ export const make = <T extends State>(component: T) => {
   if (Util.isAsync(f)) fc._op = 'Async';
   return component;
 };
+
+// =============================================================================
+// Interops
+// =============================================================================
 
 export const call = (self: State): Effect.Effect<Jsx.Children> => {
   const f = self.type as Util.MutableFn<Fn>;
@@ -160,6 +172,10 @@ export const commit = <T extends State>(state: T): Effect.Effect<T> => Effect.sy
   return state;
 });
 
+// =============================================================================
+// Hooks
+// =============================================================================
+
 type Hook = Reducer | Effector;
 
 interface Reducer extends Inspectable.Inspectable {
@@ -180,6 +196,15 @@ interface Effector extends Inspectable.Inspectable {
   readonly data: readonly any[] | undefined;
   readonly run : () => unknown;
 }
+
+export interface Hooks {
+  readonly useState : <A>(initial: A | (() => A)) => [state: A, setState: (next: A | ((prev: A) => A)) => void];
+  readonly useEffect: (effect: () => void | Promise<void> | Effect.Effect<void, any, any>, deps?: any[]) => void;
+}
+
+// =============================================================================
+// Hooks Prototypes
+// =============================================================================
 
 const Hook = Data.taggedEnum<Hook>();
 
@@ -213,10 +238,9 @@ const badDepLength = (hook: Effector, deps?: any[]) =>
     message: `Expected ${hook.data?.length} dependencies, got ${deps?.length}`,
   });
 
-export interface Hooks {
-  readonly useState : <A>(initial: A | (() => A)) => [state: A, setState: (next: A | ((prev: A) => A)) => void];
-  readonly useEffect: (effect: () => void | Promise<void> | Effect.Effect<void, any, any>, deps?: any[]) => void;
-}
+// =============================================================================
+// Hooks Constructors
+// =============================================================================
 
 const makeHooks = (state: State): Hooks => {
   const self = state as Types.Mutable<State>;

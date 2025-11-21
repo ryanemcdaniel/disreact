@@ -201,7 +201,7 @@ describe('jsxs', () => {
 
 describe('jsxDEV', () => {
   it('unknown', () => {
-    expect(() => Jsx.jsxDEV({}, {}, undefined, false, {})).toThrowErrorMatchingInlineSnapshot(`[Error: [jsxDEV] invalid type: [object Object]]`);
+    expect(() => Jsx.jsxDEV({}, {}, undefined, false, {} as any, this)).toThrowErrorMatchingInlineSnapshot(`[Error: [jsxDEV] invalid type: [object Object]]`);
   });
 
   it('intrinsic', () => {
@@ -211,13 +211,13 @@ describe('jsxDEV', () => {
         Jsx.jsxDEV('tag2', {
           prop2   : 'prop2',
           children: 'Hello World!',
-        }, undefined, false, {}),
+        }, undefined, false, {} as any, this),
         Jsx.jsxDEV('tag3', {
           prop2   : 'prop3',
           children: 'Hello World!',
-        }, undefined, false, {}),
+        }, undefined, false, {} as any, this),
       ],
-    }, undefined, false, {});
+    }, undefined, false, {} as any, this);
 
     expect(JSON.stringify(actual, null, 2)).toMatchInlineSnapshot(`
       "{
@@ -255,13 +255,13 @@ describe('jsxDEV', () => {
         Jsx.jsxDEV('tag2', {
           prop2   : 'prop2',
           children: 'Hello World!',
-        }, undefined, false, {}),
+        }, undefined, false, {} as any, this),
         Jsx.jsxDEV('tag3', {
           prop2   : 'prop3',
           children: 'Hello World!',
-        }, undefined, false, {}),
+        }, undefined, false, {} as any, this),
       ],
-    }, undefined, false, {});
+    }, undefined, false, {} as any, this);
 
     expect(JSON.stringify(actual, null, 2)).toMatchInlineSnapshot(`
       "{
@@ -298,13 +298,13 @@ describe('jsxDEV', () => {
         Jsx.jsxDEV('tag2', {
           prop2   : 'prop2',
           children: 'Hello World!',
-        }, undefined, false, {}),
+        }, undefined, false, {} as any, this),
         Jsx.jsxDEV('tag3', {
           prop2   : 'prop3',
           children: 'Hello World!',
-        }, undefined, false, {}),
+        }, undefined, false, {} as any, this),
       ],
-    }, undefined, false, {});
+    }, undefined, false, {} as any, this);
 
     expect(JSON.stringify(actual, null, 2)).toMatchInlineSnapshot(`
       "{
@@ -319,18 +319,18 @@ describe('jsxDEV', () => {
 describe('utils', () => {
   it('when stringifying', () => {
     function Tag1() {}
-    const jsx    = Jsx.jsxDEV(Tag1, {
+    const jsx = Jsx.jsxDEV(Tag1, {
       children: [
         Jsx.jsxDEV('tag2', {
           prop2   : 'prop2',
           children: 'Hello World!',
-        }, undefined, false, {}),
+        }, undefined, false, {} as any, this),
         Jsx.jsxDEV('tag3', {
           prop2   : 'prop3',
           children: 'Hello World!',
-        }, undefined, false, {}),
+        }, undefined, false, {} as any, this),
       ],
-    }, undefined, false, {});
+    }, undefined, false, {} as any, this);
 
     const actual = Jsx.toString.apply(jsx);
 

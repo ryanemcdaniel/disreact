@@ -6,7 +6,7 @@ export const Fragment = Jsx.Fragment;
 
 export const jsxDEV = Jsx.jsxDEV;
 
-  export declare namespace JSX {
+export declare namespace JSX {
   export type ElementType =
     | keyof IntrinsicElements
     | typeof Jsx.Fragment
