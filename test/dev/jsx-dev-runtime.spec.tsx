@@ -1,5 +1,4 @@
 import {expect, it} from 'vitest';
-import * as Jsx from '../../src/core/Jsx.js';
 
 it('when transforming', () => {
   function Tag1(props: any) {return props.children;}
@@ -16,13 +15,6 @@ it('when transforming', () => {
       </message>
     </>
   );
-
-  const transform = Jsx.transformTemplate(jsx, (node) => {
-    console.log(node.type, ...node.children.flatMap((c) => [c._tag, c.value ?? c.data]));
-    return [String(node.type), ...node.children.map((c) => [c._tag, c.value ?? c.data])].join('\n');
-  });
-
-  console.log(transform);
 
   expect(JSON.stringify(jsx, null, 2)).toMatchInlineSnapshot(`
     "{
