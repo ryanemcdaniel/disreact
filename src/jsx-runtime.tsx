@@ -1,6 +1,6 @@
 import * as Jsx from './core/Jsx.js';
 import type * as Effect from 'effect/Effect';
-import type * as JsxIntrinsic from './core/JsxIntrinsic.js';
+import type * as JsxIntrinsic from './core/Intrinsic.js';
 
 export const Fragment = Jsx.Fragment;
 
