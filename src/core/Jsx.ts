@@ -267,9 +267,9 @@ const FoldNodeProto: Util.Prototype<Fold.Node> = {
   step    : undefined,
 };
 
-export const foldResult = (obj: {type: any}) => {
+export const foldResult = (type: any) => {
   const self = Object.create(FoldProto) as Types.Mutable<Fold>;
-  self.type  = obj.type;
+  self.type  = type;
   return self;
 };
 
@@ -279,11 +279,12 @@ export const foldValue = (value: Value) => {
   return self;
 };
 
-export const foldNode = (jsx: Jsx) => {
+export const foldNode = <T extends {type: any; props: any; step?: any}>(jsx: T) => {
   const self    = Object.create(FoldNodeProto) as Types.Mutable<Fold.Node>;
   self.type     = jsx.type;
   self.props    = {...jsx.props};
   self.children = [];
+  self.step     = jsx.step;
   return self;
 };
 
@@ -346,7 +347,7 @@ export const transformTemplate = (self: Jsx, fn: (node: Fold.Node) => any): Fold
     else if (curr.children.length === 0 || inputs.has(curr)) {
       const output = outputs.get(curr)!;
       const input  = inputs.get(curr) ?? foldNode(curr);
-      const result = foldResult(curr);
+      const result = foldResult(curr.type);
       result.data  = fn(input);
       output.children.push(result);
     }
@@ -366,7 +367,7 @@ export const transformTemplate = (self: Jsx, fn: (node: Fold.Node) => any): Fold
   }
   outputs.clear();
   inputs.clear();
-  const final = foldResult(self);
+  const final = foldResult(self.type);
   final.data  = fn(root);
   return final;
 };

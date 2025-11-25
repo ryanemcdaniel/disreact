@@ -3,6 +3,7 @@ import * as v10 from 'discord-api-types/v10';
 import {hole} from 'effect/Function';
 import type * as Jsx from './Jsx.js';
 import type * as Types from 'effect/Types';
+import type * as Model from './Model.js';
 
 const encodeHex = (hex: string | number): number =>
   typeof hex === 'number' ? hex :
@@ -106,7 +107,7 @@ const EmbedAuthorProps = S.Struct({
 });
 
 const EmbedFooterProps = S.Struct({
-  text    : S.required(S.String.pipe(S.maxLength(2048))),
+  text    : (S.String.pipe(S.maxLength(2048))),
   children: S.optional(S.Any),
 });
 
@@ -120,22 +121,22 @@ const ButtonPrimaryProps = S.Union(
   S.Struct({
     id       : S.optional(Uint32Id),
     custom_id: S.optional(S.String),
-    label    : S.required(S.String),
+    label    : (S.String),
     disabled : S.optional(S.Boolean),
     onClick  : S.optional(Handler),
   }),
   S.Struct({
     id       : S.optional(Uint32Id),
     custom_id: S.optional(S.String),
-    emoji    : S.required(Emoji),
+    emoji    : (Emoji),
     disabled : S.optional(S.Boolean),
     onClick  : S.optional(Handler),
   }),
   S.Struct({
     id       : S.optional(Uint32Id),
     custom_id: S.optional(S.String),
-    label    : S.required(S.String),
-    emoji    : S.required(Emoji),
+    label    : (S.String),
+    emoji    : (Emoji),
     disabled : S.optional(S.Boolean),
     onClick  : S.optional(Handler),
   }),
@@ -150,21 +151,21 @@ const ButtonDangerProps = ButtonPrimaryProps;
 const ButtonLinkProps = S.Union(
   S.Struct({
     id      : S.optional(Uint32Id),
-    url     : S.required(ButtonUrl),
-    label   : S.required(S.String),
+    url     : (ButtonUrl),
+    label   : (S.String),
     disabled: S.optional(S.Boolean),
   }),
   S.Struct({
     id      : S.optional(Uint32Id),
-    url     : S.required(ButtonUrl),
-    emoji   : S.required(S.String),
+    url     : (ButtonUrl),
+    emoji   : (S.String),
     disabled: S.optional(S.Boolean),
   }),
   S.Struct({
     id      : S.optional(Uint32Id),
-    url     : S.required(ButtonUrl),
-    label   : S.required(S.String),
-    emoji   : S.required(S.String),
+    url     : (ButtonUrl),
+    label   : (S.String),
+    emoji   : (S.String),
     disabled: S.optional(S.Boolean),
   }),
 );
@@ -181,8 +182,8 @@ const ButtonRowProps = S.Struct({
 });
 
 const MenuOptionProps = S.Struct({
-  value      : S.required(OptionValue),
-  label      : S.required(OptionLabel),
+  value      : (OptionValue),
+  label      : (OptionLabel),
   description: S.optional(OptionDescription),
   emoji      : S.optional(Emoji),
   default    : S.optional(S.Boolean),
@@ -628,6 +629,8 @@ type Transform<K extends Tags> = (source: Self<K>, tgt: Targets[K]['Type']) => T
 
 export type Folds = Types.Simplify<{ [K in Tags]: Jsx.Fold<K, Targets[K]['Type']> }[Tags]>;
 
+export type MFolds = Types.Simplify<{ [K in Tags]: Model.Fold<K, Targets[K]['Type']> }[Tags]>;
+
 const transforms: { [K in Tags]: Transform<K> } = {
   [a](src) {
     return '';
@@ -990,7 +993,14 @@ export const validateAttributes = (jsx: Jsx.Jsx) => {
 
 };
 
-export const transform = (jsx: Jsx.Jsx, children: any[]) => {};
+export const transform = (node: Jsx.Fold.Node) => {
+  const fold        = node as Self<Tags>;
+  const transformer = transforms[fold.type];
+  if (!transformer) {
+    throw new Error(`[intrinsic] no transformer for type: ${fold.type}`);
+  }
+  return transformer(fold as never, {} as any);
+};
 
 export interface IntrinsicElements {
   a         : typeof MarkdownAnchorProps.Type;

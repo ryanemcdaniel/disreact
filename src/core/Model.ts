@@ -3,6 +3,7 @@ import * as Pipeable from 'effect/Pipeable';
 import * as Fn from './Fn.js';
 import * as Jsx from './Jsx.js';
 import type * as Util from './util.js';
+import type {Prototype} from './util.js';
 import type * as Types from 'effect/Types';
 import * as Effect from 'effect/Effect';
 import * as MutableRef from 'effect/MutableRef';
@@ -11,13 +12,14 @@ import * as Option from 'effect/Option';
 import * as Patch from './Patch.js';
 import * as Equal from 'effect/Equal';
 import * as GlobalValue from 'effect/GlobalValue';
-import {dual} from 'effect/Function';
+import {dual, identity} from 'effect/Function';
 
 const TypeId = '~disreact/Model';
 
 export interface Model extends Pipeable.Pipeable, Inspectable.Inspectable {
   readonly [TypeId]: typeof TypeId;
   readonly _tag    : 'Model';
+  readonly _rid    : string | undefined;
   readonly flags   : Set<LogicNode>;
   readonly body    : Node;
   readonly withLock: <A, E, R>(self: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>;
@@ -32,32 +34,11 @@ const ModelProto: Util.Prototype<Model> = {
   ...Inspectable.BaseProto,
   [TypeId]: TypeId,
   _tag    : 'Model',
+  _rid    : undefined,
   flags   : undefined,
   body    : undefined,
   withLock: undefined,
 };
-
-// =============================================================================
-// Errors
-// =============================================================================
-
-export class ModelRenderError<E = any> extends Data.TaggedError('ModelRenderError')<{
-  readonly node : LogicNode;
-  readonly cause: E;
-}>
-{}
-
-export class ModelEffectError<E = any> extends Data.TaggedError('ModelEffectError')<{
-  readonly node : LogicNode;
-  readonly cause: E;
-}>
-{}
-
-export class ModelEventError<E = any> extends Data.TaggedError('ModelEventError')<{
-  readonly node?: DataNode;
-  readonly cause: E;
-}>
-{}
 
 export class ModelUnregisteredError extends Data.TaggedError('ModelUnregisteredError')<{
   readonly id: string;
@@ -95,7 +76,29 @@ export type ModelPatch =
   | Patch.Replace<Model, Model>;
 
 // =============================================================================
-// Lifecycles
+// Lifecycle Errors
+// =============================================================================
+
+export class ModelRenderError<E = any> extends Data.TaggedError('ModelRenderError')<{
+  readonly node : LogicNode;
+  readonly cause: E;
+}>
+{}
+
+export class ModelEffectError<E = any> extends Data.TaggedError('ModelEffectError')<{
+  readonly node : LogicNode;
+  readonly cause: E;
+}>
+{}
+
+export class ModelEventError<E = any> extends Data.TaggedError('ModelEventError')<{
+  readonly node?: DataNode;
+  readonly cause: E;
+}>
+{}
+
+// =============================================================================
+// Lifecycle
 // =============================================================================
 
 export const mount = (self: Model): Effect.Effect<void, ModelRenderError | ModelEffectError> =>
@@ -106,6 +109,13 @@ export const mount = (self: Model): Effect.Effect<void, ModelRenderError | Model
 export const render = (self: Model): Effect.Effect<void, ModelRenderError | ModelEffectError> =>
   self.withLock(
     Effect.void,
+  );
+
+export const unmount = (self: Model): Effect.Effect<void> =>
+  self.withLock(
+    Effect.sync(() => {
+      unmountFromNode(self.body);
+    }),
   );
 
 export const dispatch = (self: Model, event: Event): Effect.Effect<void, ModelEventError> =>
@@ -123,13 +133,6 @@ export const dispatch = (self: Model, event: Event): Effect.Effect<void, ModelEv
     )),
     Effect.flatMap((target) => dispatchNode(target, event)),
     self.withLock,
-  );
-
-export const unmount = (self: Model): Effect.Effect<void> =>
-  self.withLock(
-    Effect.sync(() => {
-      unmountFromNode(self.body);
-    }),
   );
 
 // =============================================================================
@@ -211,6 +214,13 @@ const NodeProto: Util.Prototype<ChildNode> = {
 // Node Constructors
 // =============================================================================
 
+const fromValue = (value: Jsx.Value): ValueNode => {
+  const self = Object.create(NodeProto) as Types.Mutable<ValueNode>;
+  self._tag  = Node.Value;
+  self.props = value;
+  return self;
+};
+
 const fromJsx = (jsx: Jsx.Jsx, parent?: Node, index = 0): Node => {
   const self = Object.create(NodeProto) as Types.Mutable<Node>;
   switch (jsx._tag) {
@@ -227,6 +237,7 @@ const fromJsx = (jsx: Jsx.Jsx, parent?: Node, index = 0): Node => {
       self.props    = jsx.props;
       self.children = [];
       self.name     = jsx.type.name;
+      Fn.make(self as any);
       break;
     case 'Fragment':
       self._tag     = Node.Group;
@@ -255,9 +266,7 @@ const fromJsxRoot = (jsx: Jsx.Jsx): Node => {
       const jsx = jsxs[i];
 
       if (Jsx.isValue(jsx)) {
-        const child = Object.create(NodeProto) as Types.Mutable<ValueNode>;
-        child._tag  = Node.Value;
-        child.props = jsx;
+        const child = fromValue(jsx);
 
         parent.children.push(child);
         continue;
@@ -282,6 +291,43 @@ const fromJsxRoot = (jsx: Jsx.Jsx): Node => {
   }
   return root;
 };
+
+const fromJsxChildren = (jsxs: Jsx.Children, parent: Node): ChildNode[] => {
+  if (Jsx.isValue(jsxs)) {
+    return [fromValue(jsxs)];
+  }
+  if (Jsx.isJsx(jsxs)) {
+    return [fromJsx(jsxs, parent)];
+  }
+  const children = [] as ChildNode[];
+  for (const jsx of jsxs) {
+    if (Jsx.isValue(jsx)) {
+      children.push(fromValue(jsx));
+      continue;
+    }
+    if (Jsx.isJsx(jsx)) {
+      children.push(fromJsx(jsx, parent));
+      continue;
+    }
+  }
+  return children;
+};
+
+// =============================================================================
+// Node Lifecycle Unmount
+// =============================================================================
+
+// =============================================================================
+// Node Lifecycle Mount
+// =============================================================================
+
+// =============================================================================
+// Node Lifecycle Hydrate
+// =============================================================================
+
+// =============================================================================
+// Node Lifecycle Rerender
+// =============================================================================
 
 // =============================================================================
 // Node Algorithms
@@ -359,7 +405,7 @@ interface LogicalBoundary {
 }
 
 const getLogicalBoundary = (node: Node): LogicalBoundary => {
-  const stack          = node.children.toReversed();
+  const stack          = [...node.children].reverse();
   const syncTraversal  = [] as (ValueNode | GroupNode | DataNode)[];
   const logicTraversal = [] as LogicNode[];
 
@@ -440,7 +486,39 @@ const diffNodes = (parent: Node, rendered: Node[]): NodePatch[] => {
 
 const mountFromNode = (root: Node): Effect.Effect<void> => {
   const stack = [root];
-  return Effect.void;
+
+  return Effect.whileLoop({
+      while: () => stack.length > 0,
+      step : identity,
+      body : () => {
+        const node = stack.pop()!;
+
+        switch (node._tag) {
+          case Node.Data:
+          case Node.Group: {
+            for (let i = node.children.length - 1; i >= 0; i--) {
+              const child = node.children[i];
+              if (child._tag === Node.Value) continue;
+              stack.push(child);
+            }
+            return Effect.void;
+          }
+        }
+        const mutable = node as Types.Mutable<Node>;
+        return Fn.call(node).pipe(
+          Effect.map((rendered) => {
+            mutable.children = fromJsxChildren(rendered, node);
+            for (let i = 0; i < mutable.children.length; i++) {
+              const child = mutable.children[i];
+              if (child._tag === Node.Value) continue;
+              stack.push(child);
+            }
+          }),
+          Effect.tap(Fn.post(node)),
+        );
+      },
+    },
+  );
 };
 
 const renderFromNode = (root: Node): Effect.Effect<void> => {
@@ -565,9 +643,13 @@ export const eventOnSubmit = () => {
 export interface Hydrant {
   readonly _tag : 'Hydrant';
   readonly _rid : string;
-  readonly props: {};
-  readonly state: {};
+  readonly props: any;
+  readonly state: any;
 }
+
+// =============================================================================
+// Hydration Prototypes
+// =============================================================================
 
 const HydrantProto: Util.Prototype<Hydrant> = {
   _tag : undefined,
@@ -586,6 +668,10 @@ export const register = (type: Jsx.FC<any>, id: string) => {
   Registry.set(id, type);
 };
 
+// =============================================================================
+// Hydration Constructors
+// =============================================================================
+
 export const fromRegistered = (id: string): Effect.Effect<Model, ModelUnregisteredError> => {
   const type = Registry.get(id);
   if (!type) {
@@ -602,24 +688,133 @@ export const fromHydrant = (hydrant: Hydrant): Effect.Effect<Model, ModelUnregis
 // Folding
 // =============================================================================
 
-export interface Fold<T extends string = string, D = any> extends Jsx.Fold<T, D> {
+export interface Fold<T extends string = string, D = any> extends Inspectable.Inspectable, Jsx.Fold<T, D> {
   readonly hydrant: Hydrant;
 }
 
-export const unsafeTransform = (self: Model, fn: (self: Jsx.Fold.Node) => any): Fold => {
-  const hydrant = Object.create(HydrantProto) as Types.Mutable<Hydrant>;
-
-  const stack = [self.body];
-
-  return {
-    _tag   : 'Fold',
-    type   : '',
-    data   : {},
-    hydrant: hydrant,
-  };
+const FoldProto: Prototype<Fold> = {
+  ...Inspectable.BaseProto,
+  _tag   : 'Fold',
+  type   : undefined,
+  data   : undefined,
+  hydrant: undefined,
+  toJSON() {
+    return {
+      type   : this.type,
+      data   : this.data,
+      hydrant: this.hydrant,
+    };
+  },
 };
 
-export const transform = (self: Model, fn: (self: Jsx.Fold.Node) => any): Effect.Effect<Fold> =>
-  self.withLock(
-    Effect.sync(() => unsafeTransform(self, fn)),
-  );
+const unsafeTransform = (self: Model, fn: (self: Jsx.Fold.Node) => any): Fold => {
+  const hydrant = Object.create(HydrantProto) as Types.Mutable<Hydrant>;
+  hydrant._rid  = self._rid!;
+  const props   = {...self.body.props} as any;
+  delete props.children;
+  hydrant.props = props;
+  hydrant.state = {} as any;
+  const root    = Jsx.foldNode(self.body);
+  const stack   = [self.body] as ChildNode[];
+  const outputs = new Map<ChildNode, Jsx.Fold.Node>([[stack[0], root]]);
+  const inputs  = new Map<ChildNode, Jsx.Fold.Node>();
+
+  while (stack.length > 0) {
+    const curr   = stack.pop()!;
+    const output = outputs.get(curr)!;
+
+    switch (curr._tag) {
+      case Node.Value: {
+        const value = Jsx.foldValue(curr.props);
+        output.children.push(value);
+        break;
+      }
+      case Node.Group: {
+        for (let i = curr.children.length - 1; i >= 0; i--) {
+          const child = curr.children[i];
+          outputs.set(child, output);
+          stack.push(child);
+        }
+        break;
+      }
+      case Node.Logic: {
+        if (!curr.stack) {
+          break;
+        }
+        if (curr.stack.length !== 0) {
+          hydrant.state[curr.trie] = curr.stack.map((c) => c.data);
+        }
+        for (let i = curr.children.length - 1; i >= 0; i--) {
+          const child = curr.children[i];
+          outputs.set(child, output);
+          stack.push(child);
+        }
+        break;
+      }
+      case Node.Data: {
+        if (curr.children.length > 0) {
+          const input  = Jsx.foldNode(curr);
+          const result = Jsx.foldResult(curr.type);
+          result.data  = fn(input);
+          output.children.push(result);
+        }
+        else if (inputs.has(curr)) {
+          const input  = inputs.get(curr)!;
+          const result = Jsx.foldResult(curr.type);
+          result.data  = fn(input);
+          output.children.push(result);
+        }
+        else {
+          const input = Jsx.foldNode(curr);
+          inputs.set(curr, input);
+          stack.push(curr);
+          for (let i = curr.children.length - 1; i >= 0; i--) {
+            const child = curr.children[i];
+            outputs.set(child, input);
+            stack.push(child);
+          }
+        }
+        break;
+      }
+    }
+  }
+  outputs.clear();
+  inputs.clear();
+
+  switch (self.body._tag) {
+    case Node.Group:
+    case Node.Logic: {
+      if (!root.children.length) {
+        const final   = Object.create(FoldProto) as Types.Mutable<Fold>;
+        final.type    = '';
+        final.data    = {};
+        final.hydrant = hydrant;
+        return final;
+      }
+      const first   = root.children[0];
+      const final   = Object.create(FoldProto) as Types.Mutable<Fold>;
+      final.type    = first.type;
+      final.data    = first.data;
+      final.hydrant = hydrant;
+      return final;
+    }
+    case Node.Data: {
+      const final   = Object.create(FoldProto) as Types.Mutable<Fold>;
+      final.type    = self.body.type;
+      final.data    = fn(root);
+      final.hydrant = hydrant;
+      return final;
+    }
+  }
+};
+
+export const transform: {
+  (fn: (self: Jsx.Fold.Node) => any): (self: Model) => Effect.Effect<Fold>;
+  (self: Model, fn: (self: Jsx.Fold.Node) => any): Effect.Effect<Fold>;
+} = dual(
+  2,
+  (self: Model, fn: (self: Jsx.Fold.Node) => any): Effect.Effect<Fold> =>
+    self.withLock(
+      Effect.sync(() => unsafeTransform(self, fn)),
+    ),
+);

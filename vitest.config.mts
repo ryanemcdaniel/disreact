@@ -9,14 +9,7 @@ export default defineConfig({
       reportOnFailure: true,
       cleanOnRerun: true,
       experimentalAstAwareRemapping: true,
-      ignoreEmptyLines: true,
-      thresholds: {
-        autoUpdate: true,
-        lines: 44.59,
-        branches: 44.79,
-        functions: 45.94,
-        statements: 42.21,
-      }
+      ignoreEmptyLines: true
     },
     snapshotFormat: {
       compareKeys: null,

@@ -1,11 +1,11 @@
-import * as Effect from 'effect/Effect';
+import type * as Effect from 'effect/Effect';
 import * as Context from 'effect/Context';
 import * as Layer from 'effect/Layer';
-import * as Jsx from './core/Jsx.js';
-import type * as Intrinsic from './core/Intrinsic.js';
+import * as Intrinsic from './core/Intrinsic.js';
+import * as Model from './core/Model.js';
 
 export interface DisReactTransformerService {
-  readonly transform: (jsx: Jsx.Jsx) => Effect.Effect<Intrinsic.Folds>;
+  readonly transform: (model: Model.Model) => Effect.Effect<Intrinsic.Folds & {hydrant: Model.Hydrant}>;
 }
 
 export interface DisReactTransformer {
@@ -17,8 +17,8 @@ export const DisReactTransformer = Context.GenericTag<DisReactTransformer, DisRe
 );
 
 export const layer = () => Layer.succeed(DisReactTransformer, {
-  transform: (jsx: Jsx.Jsx) =>
-    Effect.sync(() =>
-      Jsx.transformTemplate(jsx, (node) => {}) as Intrinsic.Folds, // todo
-    ),
+  transform: (model) =>
+    model.pipe(
+      Model.transform(Intrinsic.transform),
+    ) as Effect.Effect<Intrinsic.MFolds>,
 });
