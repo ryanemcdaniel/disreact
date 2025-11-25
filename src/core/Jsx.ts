@@ -1,57 +1,80 @@
 import * as Inspectable from 'effect/Inspectable';
 import * as Pipeable from 'effect/Pipeable';
 import type * as Types from 'effect/Types';
+import * as Effect from 'effect/Effect';
+import type * as Util from './util.js';
+import * as Fn from './Fn.js';
+import * as Predicate from 'effect/Predicate';
 
-export const Fragment = Symbol.for('disreact/fragment');
+export const Fragment = Symbol.for('~disreact/jsx/Fragment');
 
-const TypeId = Symbol.for('disreact/jsx');
+const TypeId = '~disreact/jsx';
 
 export interface Jsx extends Pipeable.Pipeable, Inspectable.Inspectable {
-  readonly [TypeId]: typeof TypeId;
-  readonly key     : Key;
+  readonly [TypeId]: 'jsx' | 'jsxs' | 'jsxDEV';
+  readonly _tag    : 'Fragment' | 'Intrinsic' | 'Function';
+  readonly key     : string | number | undefined;
   readonly type    : any;
   readonly props   : any;
   readonly children: any[];
-  readonly ref     : any;
-  readonly creator : string;
-  readonly source? : any | undefined;
-  readonly context?: any | undefined;
 }
 
-export type Value = string | bigint | number | boolean | null | undefined;
+export type Value =
+  | string
+  | bigint
+  | number
+  | boolean
+  | null
+  | undefined;
 
-export type Child = Jsx | Value;
+export type Children =
+  | Value
+  | Jsx
+  | (Value | Jsx)[]
+  | Children[];
 
-export type Childs = Child[];
+export interface FC<P> {
+  <E, R>(props: P): Children | Promise<Children> | Effect.Effect<Children, E, R>;
+}
 
-export type Children = Child | Childs;
+export interface DEV extends Jsx {
+  readonly dev: {
+    multi : DEV.IsJsxs;
+    source: DEV.Source;
+    this  : DEV.This;
+  };
+}
+
+namespace DEV {
+  export type IsJsxs = boolean;
+  export type Source = {
+    fileName    : string;
+    lineNumber  : number;
+    columnNumber: number;
+  };
+  export type This = any;
+}
+
+// =============================================================================
+// Prototype
+// =============================================================================
 
 export const isJsx = (u: unknown): u is Jsx => typeof u === 'object' && u !== null && TypeId in u;
 
-export const isFragment = (u: Jsx): u is Jsx => u.type === Fragment;
-
-export const isIntrinsic = (u: Jsx): u is Jsx => typeof u.type === 'string';
-
-export const isComponent = (u: Jsx): u is Jsx => typeof u.type === 'function';
-
 export const isValue = (u: Children): u is Value => !u || typeof u !== 'object';
 
-export const isChilds = (u: Children): u is Childs => Array.isArray(u);
-
-const Proto: Partial<{ [K in keyof Jsx]: any }> = {
+const Proto: Util.Prototype<Jsx> = {
   ...Pipeable.Prototype,
   ...Inspectable.BaseProto,
-  [TypeId]: TypeId,
+  [TypeId]: undefined,
+  _tag    : undefined,
   key     : undefined,
   type    : undefined,
   props   : undefined,
   children: undefined,
-  ref     : undefined,
-  creator : undefined,
   toJSON() {
     const {children, ...props} = this.props;
     return {
-      _id     : this.creator,
       type    : typeof this.type === 'function' ? this.type.name : String(this.type),
       key     : this.key,
       props   : props,
@@ -60,53 +83,55 @@ const Proto: Partial<{ [K in keyof Jsx]: any }> = {
   },
 };
 
-const DEVProto: Partial<{ [K in keyof Jsx]: any }> = {
+const DevProto: Util.Prototype<DEV> = {
   ...Proto,
-  source : undefined,
-  context: undefined,
+  dev: undefined,
   toJSON() {
     const {children, ...props} = this.props;
     return {
-      _id     : this.creator,
       type    : typeof this.type === 'function' ? this.type.name : String(this.type),
       key     : this.key,
-      source  : this.source,
-      context : this.context,
+      // jsxs    : this.dev?.multi,
+      // src     : this.dev?.source,
+      // ctx     : this.dev?.this === globalThis ? 'globalThis' : 'unknown',
       props   : props,
       children: this.children,
     };
   },
 };
+
+// =============================================================================
+// Constructors
+// =============================================================================
 
 const getChilds = (props: any) =>
   !props.children ? [] :
   Array.isArray(props.children) ? props.children :
   [props.children];
 
-export type Key = string | number | undefined;
-
-export const jsx = (type: any, props: any, key?: Key): Jsx => {
-  const self = Object.create(Proto) as Types.Mutable<Jsx>;
+export const jsx = (type: any, props: any, key?: string | number): Jsx => {
+  const self   = Object.create(Proto) as Types.Mutable<Jsx>;
+  self[TypeId] = 'jsx';
   switch (typeof type) {
     case 'string':
+      self._tag     = 'Intrinsic';
       self.key      = key;
       self.type     = type;
       self.props    = props;
-      self.creator  = 'jsx';
       self.children = getChilds(props);
       return self;
     case 'function':
+      self._tag     = 'Function';
       self.key      = key;
       self.type     = type;
       self.props    = props;
-      self.creator  = 'jsx';
       self.children = [];
       return self;
     case 'symbol':
+      self._tag     = 'Fragment';
       self.key      = key;
       self.type     = type;
       self.props    = props;
-      self.creator  = 'jsx';
       self.children = getChilds(props);
       return self;
     default:
@@ -114,28 +139,29 @@ export const jsx = (type: any, props: any, key?: Key): Jsx => {
   }
 };
 
-export const jsxs = (type: any, props: any, key?: Key): Jsx => {
-  const self = Object.create(Proto) as Types.Mutable<Jsx>;
+export const jsxs = (type: any, props: any, key?: string | number): Jsx => {
+  const self   = Object.create(Proto) as Types.Mutable<Jsx>;
+  self[TypeId] = 'jsxs';
   switch (typeof type) {
     case 'string':
+      self._tag     = 'Intrinsic';
       self.key      = key;
       self.type     = type;
       self.props    = props;
-      self.creator  = 'jsxs';
       self.children = props.children;
       return self;
     case 'function':
+      self._tag     = 'Function';
       self.key      = key;
       self.type     = type;
       self.props    = props;
-      self.creator  = 'jsxs';
       self.children = [];
       return self;
     case 'symbol':
+      self._tag     = 'Fragment';
       self.key      = key;
       self.type     = type;
       self.props    = props;
-      self.creator  = 'jsxs';
       self.children = props.children;
       return self;
     default:
@@ -143,122 +169,212 @@ export const jsxs = (type: any, props: any, key?: Key): Jsx => {
   }
 };
 
-export const jsxDEV = (type: any, props: any, key: Key, source: any, context: any): Jsx => {
-  const self = Object.create(DEVProto) as Types.Mutable<Jsx>;
+export const jsxDEV = (
+  type: any,
+  props: any,
+  key: string | number | undefined,
+  isJsxs: DEV.IsJsxs,
+  src: DEV.Source,
+  This: DEV.This,
+): DEV => {
+  const self   = Object.create(DevProto) as Types.DeepMutable<DEV>;
+  self[TypeId] = 'jsxDEV';
   switch (typeof type) {
     case 'string':
+      self._tag     = 'Intrinsic';
       self.key      = key;
       self.type     = type;
       self.props    = props;
-      self.creator  = 'jsxDEV';
-      self.source   = source;
-      self.context  = context;
-      self.children = getChilds(props);
-      return self;
+      self.children = isJsxs ? props.children : getChilds(props);
+      break;
     case 'function':
+      self._tag     = 'Function';
       self.key      = key;
       self.type     = type;
       self.props    = props;
-      self.creator  = 'jsxDEV';
-      self.source   = source;
-      self.context  = context;
       self.children = [];
-      return self;
+      break;
     case 'symbol':
+      self._tag     = 'Fragment';
       self.key      = key;
       self.type     = type;
       self.props    = props;
-      self.creator  = 'jsxDEV';
-      self.source   = source;
-      self.context  = context;
-      self.children = getChilds(props);
-      return self;
+      self.children = isJsxs ? props.children : getChilds(props);
+      break;
     default:
       throw new Error(`[jsxDEV] invalid type: ${type}`);
   }
+  self.dev        = {} as any;
+  self.dev.multi  = isJsxs;
+  self.dev.source = src;
+  self.dev.this   = This;
+  return self as DEV;
 };
 
-export const clone = (ref: Jsx): Jsx => {
+export const clone = (src: Jsx): Jsx => {
   const self    = Object.create(Proto) as Types.Mutable<Jsx>;
-  self.key      = ref.key;
-  self.type     = ref.type;
-  self.props    = {...ref.props};
-  self.creator  = ref.creator;
-  self.source   = ref.source;
-  self.context  = ref.context;
-  self.children = ref.children.map((c) => isJsx(c) ? clone(c) : c);
+  self[TypeId]  = src[TypeId];
+  self._tag     = src._tag;
+  self.key      = src.key;
+  self.type     = src.type;
+  self.props    = {...src.props};
+  self.children = src.children.map((c) => isJsx(c) ? clone(c) : c);
   return self;
 };
 
-export const getPropsOnly = (self: Jsx) => {
-  const {children, ...props} = self.props;
-  return props;
-};
-
-export const getPropsChilds = (self: Jsx): Childs =>
+const getPropsChilds = (self: Jsx) =>
   !('children' in self.props) ? [] :
   Array.isArray(self.props.children) ? self.props.children :
   [self.props.children];
 
-export interface Transform<T extends string = string, D = any> {
-  type: T;
-  data: D;
+// =============================================================================
+// Folding
+// =============================================================================
+
+export type Fold<T extends string = string, D = any> = {
+  readonly _tag: 'Fold';
+  readonly type: T;
+  readonly data: D;
+};
+export namespace Fold {
+  export type Value<V = any> = {
+    readonly _tag: 'Value';
+    readonly data: V;
+  };
+  export type Node<T = string, P = any, V extends Value = any, I extends Fold = any> = {
+    type    : T;
+    props   : P;
+    children: (V | I)[];
+    step    : string;
+  };
 }
 
-export interface TransformValue {
-  value: any;
+const FoldProto: Util.Prototype<Fold> = {
+  _tag: 'Fold',
+  type: undefined,
+  data: undefined,
+};
+
+const FoldValue: Util.Prototype<Fold.Value> = {
+  _tag: 'Value',
+  data: undefined,
+};
+
+const FoldNodeProto: Util.Prototype<Fold.Node> = {
+  type    : undefined,
+  props   : undefined,
+  children: undefined,
+  step    : undefined,
+};
+
+export const foldResult = (type: any) => {
+  const self = Object.create(FoldProto) as Types.Mutable<Fold>;
+  self.type  = type;
+  return self;
+};
+
+export const foldValue = (value: Value) => {
+  const self = Object.create(FoldValue) as Types.Mutable<Fold.Value>;
+  self.data  = value;
+  return self;
+};
+
+export const foldNode = <T extends {type: any; props: any; step?: any}>(jsx: T) => {
+  const self    = Object.create(FoldNodeProto) as Types.Mutable<Fold.Node>;
+  self.type     = jsx.type;
+  self.props    = {...jsx.props};
+  self.children = [];
+  self.step     = jsx.step;
+  return self;
+};
+
+// =============================================================================
+// Folding - Template
+// =============================================================================
+
+export class TemplateError extends Error {
+  readonly _tag = 'TemplateError';
 }
 
-export type Transforms = (Transform | TransformValue)[];
+const callTemplate = (jsx: Jsx) => {
+  if (jsx._tag !== 'Function') return jsx.children.flat();
+  let children = jsx.children;
 
-export const transform = (self: Jsx, f: (node: Jsx, childs: (string | Transform)[]) => any): Transform => {
-  const stack   = [self as Jsx | TransformValue];
-  const targets = new WeakMap<Jsx | TransformValue, Transforms>();
-  const sources = new WeakMap<Jsx | TransformValue, (string | Transform)[]>();
+  try {
+    children = jsx.type(jsx.props);
+  }
+  catch (cause) {
+    if (cause instanceof Fn.HookError) {
+      throw new TemplateError('hooks are not allowed in jsx template components', {cause});
+    }
+    throw new TemplateError(cause as string, {cause});
+  }
+  if (Predicate.isPromise(children)) {
+    throw new TemplateError('invalid template FC: promise/async');
+  }
+  if (Effect.isEffect(children)) {
+    throw new TemplateError('invalid template FC: effectful');
+  }
+  if (!children) return [];
+  if (!Array.isArray(children)) return [children];
+  return children.flat();
+};
+
+export const transformTemplate = (self: Jsx, fn: (node: Fold.Node) => any): Fold => {
+  const root    = foldNode(self);
+  const stack   = [self] as (Jsx | Fold.Value)[];
+  const outputs = new Map([[stack[0], root]]);
+  const inputs  = new Map();
 
   while (stack.length > 0) {
-    const node = stack.pop()!;
+    const curr = stack.pop()!;
 
-    if (!isJsx(node)) {
-      const target = targets.get(node)!;
-      target.push(node);
+    if (curr._tag === 'Value') {
+      const output = outputs.get(curr)!;
+      output.children.push(curr);
     }
-    else if (node.children.length === 0) {
-      const target    = targets.get(node)!;
-      const transform = {type: node.type, data: f(node, [])};
-      target.push(transform);
+    else if (curr._tag === 'Function' || curr._tag === 'Fragment') {
+      const output = outputs.get(curr)!;
+      const jsxs   = callTemplate(curr);
+
+      for (let i = jsxs.length - 1; i >= 0; i--) {
+        const jsx  = jsxs[i];
+        const next = isValue(jsx) ? foldValue(jsx) : jsx;
+        outputs.set(next, output);
+        stack.push(next);
+      }
     }
-    else if (sources.has(node)) {
-      const target    = targets.get(node)!;
-      const transform = {type: node.type, data: f(node, sources.get(node)!)};
-      target.push(transform);
+    else if (curr.children.length === 0 || inputs.has(curr)) {
+      const output = outputs.get(curr)!;
+      const input  = inputs.get(curr) ?? foldNode(curr);
+      const result = foldResult(curr.type);
+      result.data  = fn(input);
+      output.children.push(result);
     }
     else {
-      const transforms = [] as Transform[];
-      sources.set(node, transforms);
-      stack.push(node);
+      const input = foldNode(curr);
+      const jsxs  = callTemplate(curr);
+      inputs.set(curr, input);
+      stack.push(curr);
 
-      for (let i = node.children.length - 1; i >= 0; i--) {
-        const child = node.children[i];
-
-        if (!isJsx(child)) {
-          const value = {value: child};
-          targets.set(value, transforms);
-          stack.push(value);
-        }
-        else {
-          targets.set(child, transforms);
-          stack.push(child);
-        }
+      for (let i = jsxs.length - 1; i >= 0; i--) {
+        const jsx  = jsxs[i];
+        const next = isValue(jsx) ? foldValue(jsx) : jsx;
+        outputs.set(next, input);
+        stack.push(next);
       }
     }
   }
-
-  return {
-    type: self.type,
-    data: f(self, sources.get(self) ?? []),
-  };
+  outputs.clear();
+  inputs.clear();
+  const final = foldResult(self.type);
+  final.data  = fn(root);
+  return final;
 };
+
+// =============================================================================
+// Misc
+// =============================================================================
 
 const toStringProp = (v: unknown): string => {
   if (v === null) return `${v}`;
